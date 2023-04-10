@@ -2,7 +2,9 @@ import argparse
 import logging
 import os
 import types
-from typing import List, Text, Union, Optional, Any
+import zlib
+import json
+from typing import List, Text, Union, Optional
 from ssl import SSLContext
 
 from sanic import Sanic, response
@@ -101,7 +103,13 @@ def create_app(
     @app.post("/webhook")
     async def webhook(request: Request) -> HTTPResponse:
         """Webhook to retrieve action calls."""
-        action_call = request.json
+        if request.headers.get("Content-Encoding") == "deflate":
+            # Decompress the request data using zlib
+            decompressed_data = zlib.decompress(request.body)
+            # Load the JSON data from the decompressed request data
+            action_call = json.loads(decompressed_data)
+        else:
+            action_call = request.json
         if action_call is None:
             body = {"error": "Invalid body request"}
             return response.json(body, status=400)
@@ -132,6 +140,15 @@ def create_app(
 
         body = [{"name": k} for k in executor.actions.keys()]
         return response.json(body, status=200)
+
+    @app.exception(Exception)
+    async def exception_handler(request, exception: Exception):
+        logger.error(
+            msg=f"Exception occurred during execution of request {request}",
+            exc_info=exception,
+        )
+        body = {"error": str(exception), "request_body": request.json}
+        return response.json(body, status=500)
 
     return app
 

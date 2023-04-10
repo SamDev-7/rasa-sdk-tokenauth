@@ -63,11 +63,17 @@ class ActionQueryKnowledgeBase(Action):
         """
         if attribute_value:
             dispatcher.utter_message(
-                text=f"'{object_name}' has the value '{attribute_value}' for attribute '{attribute_name}'."
+                text=(
+                    f"'{object_name}' has the value '{attribute_value}' "
+                    f"for attribute '{attribute_name}'."
+                )
             )
         else:
             dispatcher.utter_message(
-                text=f"Did not find a valid value for attribute '{attribute_name}' for object '{object_name}'."
+                text=(
+                    f"Did not find a valid value for attribute '{attribute_name}' "
+                    f"for object '{object_name}'."
+                )
             )
 
     async def utter_objects(
@@ -106,8 +112,9 @@ class ActionQueryKnowledgeBase(Action):
         tracker: Tracker,
         domain: "DomainDict",
     ) -> List[Dict[Text, Any]]:
-        """
-        Executes this action. If the user ask a question about an attribute,
+        """Executes this action.
+
+        If the user ask a question about an attribute,
         the knowledge base is queried for that attribute. Otherwise, if no
         attribute was detected in the request or the user is talking about a new
         object type, multiple objects of the requested type are returned from the
